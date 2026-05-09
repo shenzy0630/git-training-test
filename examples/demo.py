@@ -45,18 +45,18 @@ def main():
     print("几何变换完成")
     
     # 显示结果（可选）
-    cv2.imshow('Original', image)
-    cv2.imshow('Grayscale', gray)
-    cv2.imshow('Blurred', blurred)
-    cv2.imshow('Sobel Edges', edges_sobel)
-    cv2.imshow('Canny Edges', edges_canny)
-    cv2.imshow('Rotated', rotated)
-    cv2.imshow('Resized', resized)
-    cv2.imshow('Flipped', flipped)
+    # cv2.imwrite('Original', image)
+    # cv2.imshow('Grayscale', gray)
+    # cv2.imshow('Blurred', blurred)
+    # cv2.imshow('Sobel Edges', edges_sobel)
+    # cv2.imshow('Canny Edges', edges_canny)
+    # cv2.imshow('Rotated', rotate)
+    # cv2.imshow('Resized', resized)
+    # cv2.imshow('Flipped', flipped)
     
-    print("\n按任意键关闭窗口...")
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # print("\n按任意键关闭窗口...")
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

@@ -1,0 +1,73 @@
+# ==============================================================================
+# docker-compose.yml
+#
+# 定义 3 个服务：
+#   test  - 运行完整测试套件
+#   dev   - 交互式开发环境
+#   demo  - 运行示例脚本
+#
+# 常用命令：
+#   docker compose run --rm test    # 跑测试
+#   docker compose run --rm dev     # 进开发 shell
+#   docker compose run --rm demo    # 跑 demo
+# ==============================================================================
+
+# Compose 文件格式版本。3.9 是目前稳定的主流版本
+version: "3.9"
+
+services:
+  # ------------------------------------------------------------------
+  # test 服务：运行测试套件
+  # ------------------------------------------------------------------
+  test:
+    # build 指示 Compose 用当前目录的 Dockerfile 构建镜像
+    build:
+      context: .                    # 构建上下文（Dockerfile 所在目录）
+      dockerfile: Dockerfile        # 用生产 Dockerfile
+    image: vision-toolkit:latest    # 构建后给镜像打这个标签
+
+    # volumes 把宿主机目录挂载到容器
+    # 把整个项目挂进去，这样改完代码立刻能重新跑测试，不用重建镜像
+    volumes:
+      - .:/app                      # 宿主机当前目录 → 容器 /app
+
+    # command 覆盖 Dockerfile 里的 CMD
+    # 这里加了 --cov-report=term-missing，比 Dockerfile 里的默认命令多些细节
+    command: pytest tests/ -v --cov=src --cov-report=term-missing
+
+  # ------------------------------------------------------------------
+  # dev 服务：交互式开发环境
+  # ------------------------------------------------------------------
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev    # 用开发 Dockerfile（带 vim/git/ipython）
+    image: vision-toolkit:dev
+
+    volumes:
+      - .:/workspace                # 项目代码挂到 /workspace
+
+    working_dir: /workspace         # 进容器后直接在这里
+
+    # 交互式 shell 必需的三个选项
+    stdin_open: true                # 保持 STDIN 打开（-i）
+    tty: true                       # 分配伪终端（-t）
+
+    # environment 设置环境变量
+    environment:
+      - PYTHONPATH=/workspace       # 让 Python 能 from src.xxx import
+      - PYTHONDONTWRITEBYTECODE=1
+
+    command: bash
+
+  # ------------------------------------------------------------------
+  # demo 服务：运行示例脚本
+  # ------------------------------------------------------------------
+  demo:
+    image: vision-toolkit:latest    # 直接用生产镜像（注意：先 docker compose build test 一次）
+
+    volumes:
+      - ./examples:/app/examples    # 示例脚本
+      - ./output:/app/output        # 输出目录（容器里生成的结果能在本地看到）
+
+    command: python examples/demo.py

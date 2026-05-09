@@ -1,0 +1,39 @@
+{
+  // Dev Container 显示名
+  "name": "Vision Toolkit Dev",
+
+  // 用已有的 Dockerfile.dev 构建镜像
+  "build": {
+    "dockerfile": "../Dockerfile.dev",
+    "context": ".."
+  },
+
+  // VSCode 相关配置
+  "customizations": {
+    "vscode": {
+      // 在容器里自动装这些扩展
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.pylint",
+        "ms-toolsai.jupyter"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.formatOnSave": true,
+        "python.testing.pytestEnabled": true,
+        "python.testing.pytestArgs": ["tests"]
+      }
+    }
+  },
+
+  // 把项目目录挂到容器里
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind"
+  ],
+  // 容器里的工作目录
+  "workspaceFolder": "/workspace",
+
+  // 容器创建后自动执行（装依赖）
+  "postCreateCommand": "pip install -r requirements.txt"
+}

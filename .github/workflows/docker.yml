@@ -1,0 +1,96 @@
+# ==============================================================================
+# GitHub Actions：自动构建并推送 Docker 镜像到 GHCR
+#
+# 触发条件：
+#   - 推送 v* 开头的 tag（如 v1.0.0）→ 构建并推送
+#   - 对 main 分支的 PR，且改动了 Dockerfile/requirements → 只构建不推送（验证）
+# ==============================================================================
+
+name: Docker Build and Push
+
+# 触发条件
+on:
+  # 推 tag 时触发
+  push:
+    tags:
+      - "v*"                        # v1.0.0、v2.3.1 都会触发
+  # PR 时验证 Dockerfile 能否构建成功
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - "requirements.txt"
+      - "src/**"
+      - ".github/workflows/docker.yml"
+
+# 全局环境变量
+env:
+  REGISTRY: ghcr.io                 # GitHub Container Registry 地址
+  IMAGE_NAME: ${{ github.repository }}  # 镜像名 = 仓库名
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    # 权限声明：要推镜像到 GHCR 必须有 packages:write
+    # contents:read 是读取仓库代码的基本权限
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      # ---------- 第 1 步：拉代码 ----------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------- 第 2 步：装 Buildx ----------
+      # Buildx 是 Docker 的增强版构建器，支持：
+      #   - 多架构构建（amd64 + arm64）
+      #   - 构建缓存（用 GitHub Actions 缓存加速）
+      #   - 高级构建功能（如 secrets、SSH）
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ---------- 第 3 步：登录 GHCR ----------
+      # 只在 push 事件时登录（PR 不推镜像所以不用登录）
+      # GITHUB_TOKEN 是 GitHub Actions 自动生成的，不用你手动配
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}           # 触发这次 workflow 的 GitHub 用户
+          password: ${{ secrets.GITHUB_TOKEN }}   # 自动提供的 token
+
+      # ---------- 第 4 步：生成镜像的 tag ----------
+      # 这个 action 根据 git 事件自动生成合适的 Docker tag
+      # 例如推 v1.0.0 时会生成 tags：
+      #   - ghcr.io/owner/repo:1.0.0
+      #   - ghcr.io/owner/repo:1.0
+      #   - ghcr.io/owner/repo:latest
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}      # 1.0.0
+            type=semver,pattern={{major}}.{{minor}}  # 1.0
+            type=ref,event=branch                # main
+            type=ref,event=pr                    # pr-42
+
+      # ---------- 第 5 步：构建并推送 ----------
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          # PR 时只构建不推送（push: false）
+          # tag 推送时真的推（push: true）
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # 使用 GitHub Actions 缓存加速
+          #   cache-from：从缓存读
+          #   cache-to:mode=max 把所有中间层都缓存（最激进）
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

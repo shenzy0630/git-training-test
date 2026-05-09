@@ -1,0 +1,56 @@
+# ==============================================================================
+# 开发用 Dockerfile for vision-toolkit
+#
+# 特点：
+# - 比生产镜像多装 git、vim、ipython 等开发工具
+# - 多装 black/pylint/pytest-benchmark 等代码质量工具
+# - 不 COPY 源代码（源代码通过 volume 挂载进来，改动实时生效）
+# ==============================================================================
+
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# ---------- 1. 系统依赖 + 开发工具 ----------
+# 比生产镜像多装：
+#   git, curl, vim     ← 开发时常用
+#   build-essential    ← 某些 pip 包需要编译（比如从源码装 numpy）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # 运行时依赖（和生产 Dockerfile 一样）
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libgl1 \
+    # 开发工具
+    git \
+    curl \
+    vim \
+    build-essential \
+    openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------- 2. Python 包 ----------
+# 项目依赖 + 开发工具
+# 注意：这里故意把开发依赖和项目依赖分两次装，方便单独调整
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
+
+RUN pip install --no-cache-dir \
+    pytest-benchmark \
+    black \
+    pylint \
+    mypy \
+    ipython \
+    jupyter
+
+# ---------- 3. 工作目录 ----------
+# /workspace 是惯例，很多 Dev Container 工具默认用这个路径
+WORKDIR /workspace
+
+# ---------- 4. 默认命令 ----------
+# 开发镜像默认进 bash，让你"docker run -it" 能直接用
+CMD ["bash"]
