@@ -1,0 +1,36 @@
+=== 部署开始 2026-05-11T22:38:38+08:00 ===
+[22:38:38] [INFO]  项目根目录：/home/shenzy/vision-toolkit
+[22:38:38] [INFO]  目标镜像：ghcr.io/your-org/vision-toolkit:latest
+[22:38:38] [INFO]  dry-run：关
+[22:38:38] [DEBUG] $ mkdir -p /home/shenzy/vision-toolkit/.deploy-backup
+[22:38:38] ==> 运行部署前置检查
+[22:38:38] [INFO]  检查必需命令
+[22:38:38] [ OK ]  命令齐全：docker curl jq git
+[22:38:38] [INFO]  检查 Docker daemon
+[22:38:38] [ OK ]  Docker daemon 正常
+[22:38:38] [INFO]  检查 Docker 版本
+[22:38:38] [ OK ]  Docker 29.4.3 >= 24.0
+[22:38:38] [INFO]  检查磁盘空间
+[22:38:38] [ OK ]  可用磁盘 136GB（需要 5GB）
+[22:38:38] [INFO]  检查项目文件
+[22:38:38] [ OK ]  项目文件齐全
+[22:38:38] [INFO]  检查端口 8000
+[22:38:38] [ OK ]  端口 8000 可用
+[22:38:38] [ OK ]  所有预检通过
+[22:38:38] ==> 备份当前运行中的镜像
+[22:38:38] [ OK ]  已记录上次镜像：python:3.10-slim
+[22:38:38] ==> 拉取最新代码
+[22:38:38] [DEBUG] $ git -C /home/shenzy/vision-toolkit fetch --tags
+[22:38:42] [DEBUG] $ git -C /home/shenzy/vision-toolkit pull --ff-only
+[22:38:46] [INFO]  自动设定 IMAGE_TAG=c8c1536
+[22:38:46] ==> 构建镜像 ghcr.io/your-org/vision-toolkit:c8c1536
+[22:38:46] [DEBUG] $ docker build -t ghcr.io/your-org/vision-toolkit:c8c1536 -t ghcr.io/your-org/vision-toolkit:latest -f /home/shenzy/vision-toolkit/Dockerfile /home/shenzy/vision-toolkit
+[22:38:46] [ OK ]  镜像构建完成
+[22:38:46] ==> 滚动启动容器
+[22:38:46] [DEBUG] $ docker compose -p vision-toolkit -f /home/shenzy/vision-toolkit/docker-compose.yml up -d --remove-orphans
+[22:38:47] [ OK ]  compose up 完成
+[22:38:47] ==> 等待服务健康
+[22:38:47] [ OK ]  健康检查通过
+[22:38:47] [ OK ]  部署完成：ghcr.io/your-org/vision-toolkit:c8c1536
+[22:38:47] [INFO]  查看容器日志：docker compose -p vision-toolkit logs -f app
+[22:38:47] [INFO]  如需回滚：./scripts/rollback.sh

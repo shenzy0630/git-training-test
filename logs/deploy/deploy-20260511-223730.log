@@ -1,0 +1,23 @@
+=== 部署开始 2026-05-11T22:37:30+08:00 ===
+[22:37:30] [INFO]  项目根目录：/home/shenzy/vision-toolkit
+[22:37:30] [INFO]  目标镜像：ghcr.io/your-org/vision-toolkit:latest
+[22:37:30] [INFO]  dry-run：开
+[22:37:30] [INFO]  [DRY-RUN] mkdir -p /home/shenzy/vision-toolkit/.deploy-backup
+[22:37:30] [INFO]  [DRY-RUN] 跳过预检（预演模式不真连 docker）
+[22:37:30] ==> 备份当前运行中的镜像
+[22:37:30] [ OK ]  已记录上次镜像：python:3.10-slim
+[22:37:30] ==> 拉取最新代码
+[22:37:30] [INFO]  [DRY-RUN] git -C /home/shenzy/vision-toolkit fetch --tags
+[22:37:30] [INFO]  [DRY-RUN] git -C /home/shenzy/vision-toolkit pull --ff-only
+[22:37:30] [INFO]  自动设定 IMAGE_TAG=c8c1536
+[22:37:30] ==> 构建镜像 ghcr.io/your-org/vision-toolkit:c8c1536
+[22:37:30] [INFO]  [DRY-RUN] docker build -t ghcr.io/your-org/vision-toolkit:c8c1536 -t ghcr.io/your-org/vision-toolkit:latest -f /home/shenzy/vision-toolkit/Dockerfile /home/shenzy/vision-toolkit
+[22:37:30] [ OK ]  镜像构建完成
+[22:37:30] ==> 滚动启动容器
+[22:37:30] [INFO]  [DRY-RUN] docker compose -p vision-toolkit -f /home/shenzy/vision-toolkit/docker-compose.yml up -d --remove-orphans
+[22:37:30] [ OK ]  compose up 完成
+[22:37:30] ==> 等待服务健康
+[22:37:30] [INFO]  [DRY-RUN] 跳过健康检查
+[22:37:30] [ OK ]  部署完成：ghcr.io/your-org/vision-toolkit:c8c1536
+[22:37:30] [INFO]  查看容器日志：docker compose -p vision-toolkit logs -f app
+[22:37:30] [INFO]  如需回滚：./scripts/rollback.sh

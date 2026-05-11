@@ -71,3 +71,14 @@ services:
       - ./output:/app/output        # 输出目录（容器里生成的结果能在本地看到）
 
     command: python examples/demo.py
+  # ------------------------------------------------------------------
+  # app 服务：为部署脚本提供健康检查的临时 Web 服务
+  # ------------------------------------------------------------------
+  app:
+    image: python:3.10-slim
+    volumes:
+      - ./health_server.py:/health_server.py
+    working_dir: /
+    ports:
+      - "8000:8000"
+    command: python health_server.py
